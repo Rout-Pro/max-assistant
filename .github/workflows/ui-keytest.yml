@@ -51,15 +51,15 @@ jobs:
             sleep 3
             adb exec-out screencap -p > shots/09-settings-before.png
             # enter a deliberately INVALID key to exercise the diagnostics path
-            adb shell input tap 500 800   # key field
+            adb shell input tap 540 1314  # API key field (below Model label area)
             sleep 1
             adb shell input text "AIzaINVALIDKEY1234567890123456789012"
             sleep 1
             adb shell input keyevent 111  # ESC dismisses keyboard
             sleep 1
-            adb shell input tap 235 1030  # Save key
+            adb shell input tap 195 1659  # Save key
             sleep 1
-            adb shell input tap 520 1030  # Key test karo
+            adb shell input tap 510 1659  # Key test karo
             sleep 12
             adb exec-out screencap -p > shots/10-settings-keytest.png
             # chat should now name the real cause instead of the generic message
