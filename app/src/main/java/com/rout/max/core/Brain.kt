@@ -188,4 +188,35 @@ ${JSONArray(screenNodes.take(85).map { JSONObject(it) }).toString()}
 
     fun apiUrl(model: String, apiKey: String): String =
         "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
+
+    /** Used when the saved model name was renamed or retired. */
+    const val FALLBACK_MODEL = "gemini-flash-latest"
+
+    fun isModelNotFound(code: Int, body: String): Boolean =
+        code == 404 || body.contains("NOT_FOUND") || body.contains("not found", true) ||
+            body.contains("not supported", true)
+
+    fun isKeyProblem(code: Int, body: String): Boolean =
+        code == 401 || code == 403 || body.contains("API_KEY_INVALID") ||
+            (code == 400 && body.contains("API key", true))
+
+    /** Maps a Gemini HTTP failure to a specific Hinglish explanation + next step. */
+    fun diagnoseHttpError(code: Int, body: String): String = when {
+        isKeyProblem(code, body) ->
+            "Sir, Gemini API key reject ho rahi hai. aistudio.google.com/apikey se nayi free key banakar Settings mein save karein, phir 'Key test karo' se check karein."
+        code == 429 || body.contains("RESOURCE_EXHAUSTED") ->
+            "Sir, Gemini key ka free quota abhi khatam ho gaya hai. Kuch der baad try karein, warna nayi key lagayein."
+        isModelNotFound(code, body) ->
+            "Sir, ye Gemini model ab available nahi hai. Settings mein Model ko gemini-flash-latest kar dein."
+        code in 500..599 ->
+            "Sir, Gemini server abhi busy hai. Thodi der baad try karein."
+        else ->
+            "Sir, Gemini se jawab nahi mila (error $code). Thodi der baad try karein."
+    }
+
+    fun diagnoseNetError(reason: String): String = when (reason) {
+        "ssl" -> "Sir, secure connection nahi ban pa raha. VPN ya ad-blocker on hai to off karke try karein."
+        "timeout" -> "Sir, internet bahut slow hai - request time out ho gayi. Network theek karke fir bolein."
+        else -> "Sir, internet connect nahi ho pa raha. Data ya Wi-Fi check karke fir bolein."
+    }
 }

@@ -89,9 +89,20 @@ object MAXCore {
             notifications = notifications
         ).toString()
 
-        val raw = httpPost(Brain.apiUrl(KeyStore.getModel(appCtx), apiKey), body)
-        if (raw != null) {
-            val text = Brain.extractTextFromApiResponse(raw)
+        var model = KeyStore.getModel(appCtx)
+        var outcome = httpPost(Brain.apiUrl(model, apiKey), body)
+        // If the configured model was renamed/retired, retry once with the
+        // current flash alias and remember it when it works.
+        if (outcome is ApiOutcome.HttpErr && Brain.isModelNotFound(outcome.code, outcome.body) &&
+            model != Brain.FALLBACK_MODEL) {
+            val retry = httpPost(Brain.apiUrl(Brain.FALLBACK_MODEL, apiKey), body)
+            if (retry is ApiOutcome.Ok) {
+                KeyStore.setModel(appCtx, Brain.FALLBACK_MODEL)
+                outcome = retry
+            }
+        }
+        if (outcome is ApiOutcome.Ok) {
+            val text = Brain.extractTextFromApiResponse(outcome.body)
             if (text != null) {
                 val parsed = Brain.parseResponse(text)
                 Brain.appendHistory(userText, parsed.speech)
@@ -100,9 +111,14 @@ object MAXCore {
             return BrainResponse("Sir, AI ka reply samajh nahi aaya, ek baar fir bolo?", "alert", false, emptyList())
         }
 
-        // Network or API failure: degrade gracefully to keyless commands.
+        // Failure: keyless commands still work; otherwise say exactly why.
         LocalRouter.route(userText, battery)?.let { return it }
-        return BrainResponse("Sir, internet ya Gemini se link nahi ban pa rahi. Thodi der baad try karein.", "alert", false, emptyList())
+        val msg = when (outcome) {
+            is ApiOutcome.HttpErr -> Brain.diagnoseHttpError(outcome.code, outcome.body)
+            is ApiOutcome.NetErr -> Brain.diagnoseNetError(outcome.reason)
+            is ApiOutcome.Ok -> "Sir, AI ka reply samajh nahi aaya, ek baar fir bolo?"
+        }
+        return BrainResponse(msg, "alert", false, emptyList())
     }
 
     private fun isMorningBriefingQuery(lower: String): Boolean =
@@ -123,7 +139,14 @@ object MAXCore {
         return BrainResponse(speech, "happy", false, emptyList())
     }
 
-    private suspend fun httpPost(url: String, body: String): String? = withContext(Dispatchers.IO) {
+    /** Result of a Gemini API call that keeps the real failure cause. */
+    sealed interface ApiOutcome {
+        class Ok(val body: String) : ApiOutcome
+        class HttpErr(val code: Int, val body: String) : ApiOutcome
+        class NetErr(val reason: String) : ApiOutcome
+    }
+
+    private suspend fun httpPost(url: String, body: String): ApiOutcome = withContext(Dispatchers.IO) {
         var conn: HttpURLConnection? = null
         try {
             conn = (URL(url).openConnection() as HttpURLConnection).apply {
@@ -136,12 +159,37 @@ object MAXCore {
             OutputStreamWriter(conn.outputStream, Charsets.UTF_8).use { it.write(body) }
             val code = conn.responseCode
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            val text = stream?.bufferedReader()?.use { it.readText() } ?: return@withContext null
-            if (code in 200..299) text else null
+            val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
+            if (code in 200..299) ApiOutcome.Ok(text) else ApiOutcome.HttpErr(code, text)
+        } catch (e: javax.net.ssl.SSLException) {
+            ApiOutcome.NetErr("ssl")
+        } catch (e: java.net.SocketTimeoutException) {
+            ApiOutcome.NetErr("timeout")
+        } catch (e: java.net.UnknownHostException) {
+            ApiOutcome.NetErr("net")
+        } catch (e: java.net.ConnectException) {
+            ApiOutcome.NetErr("net")
         } catch (e: Exception) {
-            null
+            ApiOutcome.NetErr("other")
         } finally {
             conn?.disconnect()
+        }
+    }
+
+    /**
+     * Minimal live ping of the saved key + model. Returns a user-readable
+     * status line, never the key or the raw API body.
+     */
+    suspend fun testApiKey(context: Context): String {
+        val appCtx = context.applicationContext
+        val apiKey = KeyStore.getApiKey(appCtx)
+        if (apiKey.isBlank()) return "Pehle API key daal kar Save key dabayein."
+        val model = KeyStore.getModel(appCtx).ifBlank { Brain.FALLBACK_MODEL }
+        val body = """{"contents":[{"role":"user","parts":[{"text":"Say OK"}]}]}"""
+        return when (val r = httpPost(Brain.apiUrl(model, apiKey), body)) {
+            is ApiOutcome.Ok -> "Key kaam kar rahi hai - model $model se jawab mil gaya."
+            is ApiOutcome.HttpErr -> Brain.diagnoseHttpError(r.code, r.body)
+            is ApiOutcome.NetErr -> Brain.diagnoseNetError(r.reason)
         }
     }
 }

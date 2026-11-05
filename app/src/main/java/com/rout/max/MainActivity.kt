@@ -71,6 +71,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -843,6 +845,8 @@ class MainActivity : ComponentActivity() {
         var ghostText by remember { mutableStateOf(KeyStore.getGhostReplyText(context)) }
         var orb by remember { mutableStateOf(KeyStore.isOrbEnabled(context)) }
         var quickCsv by remember { mutableStateOf(loadQuickActions(context).joinToString(", ")) }
+        var keyTestResult by remember { mutableStateOf("") }
+        val scope = rememberCoroutineScope()
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -888,13 +892,25 @@ class MainActivity : ComponentActivity() {
                             focusedContainerColor = Color(0x14FFFFFF), unfocusedContainerColor = Color(0x0AFFFFFF),
                             focusedBorderColor = Color(0x59FFFFFF), unfocusedBorderColor = Color(0x2EFFFFFF))
                     )
-                    Button(onClick = {
-                        KeyStore.setApiKey(context, apiKey)
-                        KeyStore.setModel(context, model.ifBlank { "gemini-2.5-flash" })
-                        refreshStatus()
-                    }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Accent),
-                        modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
-                    ) { Text("Save key", fontSize = 12.sp) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = {
+                            KeyStore.setApiKey(context, apiKey)
+                            KeyStore.setModel(context, model.ifBlank { "gemini-2.5-flash" })
+                            refreshStatus()
+                        }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Accent),
+                            modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
+                        ) { Text("Save key", fontSize = 12.sp) }
+                        Button(onClick = {
+                            KeyStore.setApiKey(context, apiKey)
+                            KeyStore.setModel(context, model.ifBlank { "gemini-2.5-flash" })
+                            refreshStatus()
+                            keyTestResult = "Key test ho rahi hai..."
+                            scope.launch { keyTestResult = MAXCore.testApiKey(context) }
+                        }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Accent),
+                            modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
+                        ) { Text("Key test karo", fontSize = 12.sp) }
+                    }
+                    if (keyTestResult.isNotBlank()) HintText(keyTestResult)
                 }
             }
 
