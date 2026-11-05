@@ -260,7 +260,6 @@ class MainActivity : ComponentActivity() {
         val state by AssistantController.state
         var input by remember { mutableStateOf("") }
         val name = remember { KeyStore.getUserName(context) }
-        val quickActions = remember { mutableStateListOf<String>().apply { addAll(loadQuickActions(context)) } }
 
         val permLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { refreshStatus() }
@@ -351,21 +350,6 @@ class MainActivity : ComponentActivity() {
                     colors = ButtonDefaults.buttonColors(containerColor = MaxColors.GlassStrong, contentColor = MaxColors.Error),
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("■ STOP", fontSize = 13.sp, fontWeight = FontWeight.Bold) }
-            }
-
-            Spacer(Modifier.height(18.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(quickActions) { qa ->
-                    Box(
-                        modifier = Modifier
-                            .liquidGlass(RoundedCornerShape(20.dp))
-                            .clickable {
-                                addUser(qa)
-                                AssistantController.ask(context, qa, null, ::addUser, ::addMAX)
-                            }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                    ) { Text(qa, color = MaxColors.TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
-                }
             }
 
             Spacer(Modifier.weight(1f))
