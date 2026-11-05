@@ -95,6 +95,11 @@ import com.rout.max.core.TaskStepStatus
 import com.rout.max.core.VoiceEngine
 import com.rout.max.ui.MaxColorScheme
 import com.rout.max.ui.MaxColors
+import com.rout.max.ui.HudBarRows
+import com.rout.max.ui.HudBars
+import com.rout.max.ui.HudGauge
+import com.rout.max.ui.HudGridBackdrop
+import com.rout.max.ui.HudLineGraph
 import com.rout.max.ui.HudPanel
 import com.rout.max.ui.JarvisCore
 import com.rout.max.ui.WaveformStrip
@@ -259,26 +264,50 @@ class MainActivity : ComponentActivity() {
         val permLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { refreshStatus() }
 
+        Box(modifier = Modifier.fillMaxSize()) {
+        HudGridBackdrop()
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(14.dp))
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column {
-                    Text("MAX", color = MaxColors.Accent, fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 4.sp)
-                    Text(statusLine.value, color = MaxColors.TextSecondary, fontSize = 10.sp)
+                    Text("M A X", color = MaxColors.Accent, fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                        letterSpacing = 6.sp, fontFamily = FontFamily.Monospace)
+                    Text(statusLine.value, color = MaxColors.TextSecondary, fontSize = 9.sp,
+                        fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
                 }
             }
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(2.dp))
             Text(
                 if (name.isNotBlank()) "Namaste, $name" else "Namaste",
-                color = MaxColors.TextSecondary, fontSize = 14.sp
+                color = MaxColors.TextSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(6.dp))
 
-            // JARVIS-style core: wireframe face inside reactor rings (state-driven).
-            JarvisCore(state = state, size = 216.dp)
+            // JARVIS-style core flanked by HUD side rails (reference layout).
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(
+                    modifier = Modifier.width(58.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HudLineGraph(state = state)
+                    HudBars(state = state)
+                }
+                Spacer(Modifier.weight(1f))
+                JarvisCore(state = state, size = 196.dp)
+                Spacer(Modifier.weight(1f))
+                Column(
+                    modifier = Modifier.width(58.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HudGauge(state = state)
+                    HudGauge(state = state)
+                    HudBarRows()
+                }
+            }
             Spacer(Modifier.height(2.dp))
             Text(
                 state.label,
@@ -289,7 +318,7 @@ class MainActivity : ComponentActivity() {
                 },
                 fontSize = 12.sp, letterSpacing = 3.sp, fontFamily = FontFamily.Monospace
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Real-data HUD readouts: live clock, real battery, Gemini key state.
             var now by remember { mutableStateOf("--:--:--") }
@@ -335,7 +364,7 @@ class MainActivity : ComponentActivity() {
                                 AssistantController.ask(context, qa, null, ::addUser, ::addMAX)
                             }
                             .padding(horizontal = 14.dp, vertical = 8.dp)
-                    ) { Text(qa, color = MaxColors.TextPrimary, fontSize = 12.sp) }
+                    ) { Text(qa, color = MaxColors.TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
                 }
             }
 
@@ -372,6 +401,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
         }
     }
 
