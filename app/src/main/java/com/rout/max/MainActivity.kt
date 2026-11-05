@@ -103,6 +103,7 @@ import com.rout.max.ui.HudLineGraph
 import com.rout.max.ui.HudPanel
 import com.rout.max.ui.JarvisCore
 import com.rout.max.ui.WaveformStrip
+import com.rout.max.ui.liquidGlass
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -191,7 +192,7 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 containerColor = MaxColors.Black,
                 bottomBar = {
-                    NavigationBar(containerColor = MaxColors.NearBlack) {
+                    NavigationBar(containerColor = Color(0x14FFFFFF)) {
                         tabs.forEachIndexed { i, label ->
                             NavigationBarItem(
                                 selected = tab == i,
@@ -357,8 +358,7 @@ class MainActivity : ComponentActivity() {
                 items(quickActions) { qa ->
                     Box(
                         modifier = Modifier
-                            .background(MaxColors.Glass, RoundedCornerShape(20.dp))
-                            .border(1.dp, MaxColors.Border, RoundedCornerShape(20.dp))
+                            .liquidGlass(RoundedCornerShape(20.dp))
                             .clickable {
                                 addUser(qa)
                                 AssistantController.ask(context, qa, null, ::addUser, ::addMAX)
@@ -373,12 +373,15 @@ class MainActivity : ComponentActivity() {
                 OutlinedTextField(
                     value = input,
                     onValueChange = { input = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Bolo ya likho...", fontSize = 13.sp, color = MaxColors.TextSecondary) },
+                    modifier = Modifier.weight(1f).liquidGlass(RoundedCornerShape(24.dp)),
+                    placeholder = { Text("Bolo ya likho...", fontSize = 13.sp, color = MaxColors.TextSecondary, fontFamily = FontFamily.Monospace) },
                     singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaxColors.Border,
-                        unfocusedBorderColor = MaxColors.Border,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
                         cursorColor = MaxColors.Accent
                     )
                 )
@@ -407,13 +410,13 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun OrbButton(label: String, onClick: () -> Unit) {
-        Button(
-            onClick = onClick,
-            shape = CircleShape,
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-            modifier = Modifier.size(44.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaxColors.Glass, contentColor = MaxColors.Accent)
-        ) { Text(label, fontSize = 16.sp) }
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .liquidGlass(CircleShape)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) { Text(label, fontSize = 16.sp, color = MaxColors.TextPrimary) }
     }
 
     // ---------- CHAT ----------

@@ -24,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -409,3 +411,17 @@ fun WaveformStrip(state: AssistantState, modifier: Modifier = Modifier) {
             modifier = Modifier.align(Alignment.CenterHorizontally))
     }
 }
+
+/** Liquid-glass surface: translucent gloss gradient + bright top rim. */
+fun Modifier.liquidGlass(shape: Shape): Modifier = this
+    .background(
+        Brush.verticalGradient(
+            listOf(Color.White.copy(alpha = 0.20f), Color(0xFF9BE9FF).copy(alpha = 0.07f), Color.White.copy(alpha = 0.04f))
+        ), shape
+    )
+    .border(
+        1.dp,
+        Brush.verticalGradient(
+            listOf(Color.White.copy(alpha = 0.55f), Color(0xFF9BE9FF).copy(alpha = 0.18f))
+        ), shape
+    )
