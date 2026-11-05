@@ -597,18 +597,20 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun PermRow(title: String, desc: String, granted: Boolean, onGrant: () -> Unit) {
         GlassCard {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(title, color = MaxColors.TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    Text(desc, color = MaxColors.TextSecondary, fontSize = 11.sp)
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(title, color = MaxColors.TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(desc, color = MaxColors.TextSecondary, fontSize = 11.sp)
+                    }
+                    Text(if (granted) "ON" else "OFF",
+                        color = if (granted) MaxColors.Success else MaxColors.Error,
+                        fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
-                Text(if (granted) "ON" else "OFF",
-                    color = if (granted) MaxColors.Success else MaxColors.Error,
-                    fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-            if (!granted) {
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = onGrant) { Text("Grant", fontSize = 12.sp, color = MaxColors.Accent) }
+                if (!granted) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick = onGrant) { Text("Grant", fontSize = 12.sp, color = MaxColors.Accent) }
+                }
             }
         }
     }

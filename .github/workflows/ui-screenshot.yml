@@ -37,17 +37,20 @@ jobs:
             sleep 12
             adb exec-out screencap -p > shots/01-home.png
             # type a keyless local command on Home and send it
-            adb shell input tap 320 2200
+            adb shell input tap 400 2000   # text field
             sleep 1
-            adb shell input keyevent 61
             adb shell input text "time kya hai"
             sleep 1
             adb exec-out screencap -p > shots/02-home-typed.png
             adb shell input keyevent 111  # ESC to dismiss keyboard
             sleep 1
-            adb shell input tap 1020 2200  # send button area
+            adb shell input tap 970 2005   # send button
             sleep 6
             adb exec-out screencap -p > shots/03-home-reply.png
+            # quick action: Good morning briefing (keyless, on-device)
+            adb shell input tap 260 1375   # briefing chip
+            sleep 8
+            adb exec-out screencap -p > shots/08-briefing.png
             # switch through tabs (bottom nav, 5 tabs on 1080x2400)
             adb shell input tap 324 2270   # Chat
             sleep 3
@@ -66,3 +69,8 @@ jobs:
         with:
           name: max-ui-shots
           path: shots/
+      - name: Upload built APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: max-debug-apk-fixed
+          path: app/build/outputs/apk/debug/app-debug.apk
