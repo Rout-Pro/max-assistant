@@ -89,18 +89,7 @@ object MAXCore {
             notifications = notifications
         ).toString()
 
-        var model = KeyStore.getModel(appCtx)
-        var outcome = httpPost(Brain.apiUrl(model, apiKey), body)
-        // If the configured model was renamed/retired, retry once with the
-        // current flash alias and remember it when it works.
-        if (outcome is ApiOutcome.HttpErr && Brain.isModelNotFound(outcome.code, outcome.body) &&
-            model != Brain.FALLBACK_MODEL) {
-            val retry = httpPost(Brain.apiUrl(Brain.FALLBACK_MODEL, apiKey), body)
-            if (retry is ApiOutcome.Ok) {
-                KeyStore.setModel(appCtx, Brain.FALLBACK_MODEL)
-                outcome = retry
-            }
-        }
+        val outcome = httpPost(Brain.apiUrl(KeyStore.getModel(appCtx), apiKey), body)
         if (outcome is ApiOutcome.Ok) {
             val text = Brain.extractTextFromApiResponse(outcome.body)
             if (text != null) {
@@ -215,7 +204,7 @@ object MAXCore {
         if (apiKey.isBlank()) return "Pehle API key daal kar Save key dabayein."
         val model = KeyStore.getModel(appCtx).ifBlank { Brain.FALLBACK_MODEL }
         return when (val r = httpGet(Brain.modelInfoUrl(model, apiKey))) {
-            is ApiOutcome.Ok -> "Key aur model ($model) dono OK - ye sirf check tha, quota use nahi hua."
+            is ApiOutcome.Ok -> "Key aur model ($model) dono accessible hain - koi AI jawab generate nahi hua, ye sirf check tha."
             is ApiOutcome.HttpErr -> Brain.diagnoseHttpError(r.code, r.body)
             is ApiOutcome.NetErr -> Brain.diagnoseNetError(r.reason)
         }

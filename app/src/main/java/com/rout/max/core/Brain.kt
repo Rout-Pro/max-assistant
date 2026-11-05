@@ -200,18 +200,22 @@ ${JSONArray(screenNodes.take(85).map { JSONObject(it) }).toString()}
         code == 404 || body.contains("NOT_FOUND") || body.contains("not found", true) ||
             body.contains("not supported", true)
 
-    fun isKeyProblem(code: Int, body: String): Boolean =
-        code == 401 || code == 403 || body.contains("API_KEY_INVALID") ||
-            (code == 400 && body.contains("API key", true))
+    /** True only when Google explicitly says the key itself is invalid. */
+    fun isKeyInvalid(code: Int, body: String): Boolean =
+        body.contains("API_KEY_INVALID") || body.contains("API key not valid", true)
 
     /** Maps a Gemini HTTP failure to a specific Hinglish explanation + next step. */
     fun diagnoseHttpError(code: Int, body: String): String = when {
-        isKeyProblem(code, body) ->
-            "Sir, Gemini API key reject ho rahi hai. aistudio.google.com/apikey se nayi free key banakar Settings mein save karein, phir 'Key test karo' se check karein."
+        isKeyInvalid(code, body) ->
+            "Sir, Gemini API key invalid hai. aistudio.google.com/apikey se nayi key banakar Settings mein save karein, phir 'Key test karo' se check karein."
+        code == 403 || body.contains("PERMISSION_DENIED") ->
+            "Sir, is key ko Gemini API ka access nahi mil raha. Key restricted ho sakti hai ya Google Cloud project mein Generative Language API enable nahi hai - AI Studio se nayi key banakar try karein."
+        code == 401 || body.contains("UNAUTHENTICATED") ->
+            "Sir, Gemini key accept nahi ho rahi (401). Settings mein key sahi se dobara daal kar 'Key test karo' se check karein."
         code == 429 || body.contains("RESOURCE_EXHAUSTED") ->
-            "Sir, Gemini key ka free quota abhi khatam ho gaya hai. Kuch der baad try karein, warna nayi key lagayein."
+            "Sir, is key ka quota abhi khatam ho gaya hai. Kuch der baad try karein, warna doosri key lagayein."
         isModelNotFound(code, body) ->
-            "Sir, ye Gemini model ab available nahi hai. Settings mein Model ko gemini-flash-latest kar dein."
+            "Sir, ye Gemini model is key ke liye available nahi hai. Settings mein Model badal kar (jaise gemini-flash-latest) 'Key test karo' se check karein."
         code in 500..599 ->
             "Sir, Gemini server abhi busy hai. Thodi der baad try karein."
         else ->

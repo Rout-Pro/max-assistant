@@ -11,13 +11,14 @@ class BrainErrorTest {
     private val keyInvalidBody = """{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"reason":"API_KEY_INVALID"}]}}"""
 
     @Test fun invalidKeyMapsToKeyMessage() {
-        assertTrue(Brain.isKeyProblem(400, keyInvalidBody))
-        assertTrue(Brain.diagnoseHttpError(400, keyInvalidBody).contains("API key reject"))
+        assertTrue(Brain.isKeyInvalid(400, keyInvalidBody))
+        assertTrue(Brain.diagnoseHttpError(400, keyInvalidBody).contains("key invalid"))
     }
 
-    @Test fun forbiddenMapsToKeyMessage() {
-        assertTrue(Brain.isKeyProblem(403, "{}"))
-        assertTrue(Brain.diagnoseHttpError(403, "{}").contains("API key reject"))
+    @Test fun forbiddenMapsToPermissionMessage() {
+        assertFalse(Brain.isKeyInvalid(403, "{}"))
+        assertTrue(Brain.diagnoseHttpError(403, "{}").contains("access"))
+        assertTrue(Brain.diagnoseHttpError(401, "{}").contains("401"))
     }
 
     @Test fun quotaMapsToQuotaMessage() {
