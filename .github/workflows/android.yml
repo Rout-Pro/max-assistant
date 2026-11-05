@@ -15,8 +15,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
       - name: Unit tests
         run: bash gradlew :app:testDebugUnitTest --no-daemon --stacktrace
       - name: Assemble debug APK
