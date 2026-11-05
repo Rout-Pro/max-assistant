@@ -166,8 +166,7 @@ class MainActivity : ComponentActivity() {
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .background(MaxColors.Glass, RoundedCornerShape(16.dp))
-                .border(1.dp, MaxColors.Border, RoundedCornerShape(16.dp))
+                .liquidGlass(RoundedCornerShape(16.dp))
                 .padding(14.dp)
         ) { content() }
     }
@@ -347,8 +346,9 @@ class MainActivity : ComponentActivity() {
                 Spacer(Modifier.height(10.dp))
                 Button(
                     onClick = { AssistantController.stopAll(context) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaxColors.GlassStrong, contentColor = MaxColors.Error),
-                    shape = RoundedCornerShape(12.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Error),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
                 ) { Text("■ STOP", fontSize = 13.sp, fontWeight = FontWeight.Bold) }
             }
 
@@ -782,10 +782,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(), singleLine = true,
                         label = { Text("Tumhara naam", fontSize = 11.sp) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaxColors.Border, unfocusedBorderColor = MaxColors.Border)
+                            focusedContainerColor = Color(0x14FFFFFF), unfocusedContainerColor = Color(0x0AFFFFFF),
+                            focusedBorderColor = Color(0x59FFFFFF), unfocusedBorderColor = Color(0x2EFFFFFF))
                     )
                     Button(onClick = { KeyStore.setUserName(context, name) },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaxColors.GlassStrong, contentColor = MaxColors.Accent)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Accent),
+                        modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
                     ) { Text("Save naam", fontSize = 12.sp) }
                     HintText("Naam kabhi hardcode nahi hota - khali chhodo to MAX bina naam ke baat karegi.")
                 }
@@ -801,20 +803,23 @@ class MainActivity : ComponentActivity() {
                         visualTransformation = PasswordVisualTransformation(), singleLine = true,
                         placeholder = { Text("AIza...", fontSize = 12.sp) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaxColors.Border, unfocusedBorderColor = MaxColors.Border)
+                            focusedContainerColor = Color(0x14FFFFFF), unfocusedContainerColor = Color(0x0AFFFFFF),
+                            focusedBorderColor = Color(0x59FFFFFF), unfocusedBorderColor = Color(0x2EFFFFFF))
                     )
                     OutlinedTextField(
                         value = model, onValueChange = { model = it },
                         modifier = Modifier.fillMaxWidth(), singleLine = true,
                         label = { Text("Model", fontSize = 11.sp) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaxColors.Border, unfocusedBorderColor = MaxColors.Border)
+                            focusedContainerColor = Color(0x14FFFFFF), unfocusedContainerColor = Color(0x0AFFFFFF),
+                            focusedBorderColor = Color(0x59FFFFFF), unfocusedBorderColor = Color(0x2EFFFFFF))
                     )
                     Button(onClick = {
                         KeyStore.setApiKey(context, apiKey)
                         KeyStore.setModel(context, model.ifBlank { "gemini-2.5-flash" })
                         refreshStatus()
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaxColors.GlassStrong, contentColor = MaxColors.Accent)
+                    }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Accent),
+                        modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
                     ) { Text("Save key", fontSize = 12.sp) }
                 }
             }
@@ -902,11 +907,13 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Comma se alag karo", fontSize = 11.sp) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaxColors.Border, unfocusedBorderColor = MaxColors.Border)
+                            focusedContainerColor = Color(0x14FFFFFF), unfocusedContainerColor = Color(0x0AFFFFFF),
+                            focusedBorderColor = Color(0x59FFFFFF), unfocusedBorderColor = Color(0x2EFFFFFF))
                     )
                     Button(onClick = {
                         KeyStore.raw(context).edit().putString("quick_actions", quickCsv).apply()
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaxColors.GlassStrong, contentColor = MaxColors.Accent)
+                    }, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaxColors.Accent),
+                        modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp))
                     ) { Text("Save quick actions", fontSize = 12.sp) }
                 }
             }
@@ -917,7 +924,8 @@ class MainActivity : ComponentActivity() {
     fun ModePicker(options: List<String>, selected: String, onSelect: (String) -> Unit) {
         var open by remember { mutableStateOf(false) }
         Box {
-            OutlinedButton(onClick = { open = true }) {
+            OutlinedButton(onClick = { open = true }, modifier = Modifier.liquidGlass(RoundedCornerShape(12.dp)),
+                border = null) {
                 Text(selected, color = MaxColors.Accent, fontSize = 12.sp)
             }
             DropdownMenu(expanded = open, onDismissRequest = { open = false },
