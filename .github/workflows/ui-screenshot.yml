@@ -1,0 +1,68 @@
+name: UI screenshot check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build APK
+        run: bash gradlew :app:assembleDebug --no-daemon
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Boot emulator, install, drive UI, capture screens
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          script: |
+            mkdir -p shots
+            adb install app/build/outputs/apk/debug/app-debug.apk
+            adb shell monkey -p com.rout.max -c android.intent.category.LAUNCHER 1
+            sleep 12
+            adb exec-out screencap -p > shots/01-home.png
+            # type a keyless local command on Home and send it
+            adb shell input tap 320 2200
+            sleep 1
+            adb shell input keyevent 61
+            adb shell input text "time kya hai"
+            sleep 1
+            adb exec-out screencap -p > shots/02-home-typed.png
+            adb shell input keyevent 111  # ESC to dismiss keyboard
+            sleep 1
+            adb shell input tap 1020 2200  # send button area
+            sleep 6
+            adb exec-out screencap -p > shots/03-home-reply.png
+            # switch through tabs (bottom nav, 5 tabs on 1080x2400)
+            adb shell input tap 324 2270   # Chat
+            sleep 3
+            adb exec-out screencap -p > shots/04-chat.png
+            adb shell input tap 540 2270   # Control
+            sleep 3
+            adb exec-out screencap -p > shots/05-control.png
+            adb shell input tap 756 2270   # Memory
+            sleep 3
+            adb exec-out screencap -p > shots/06-memory.png
+            adb shell input tap 972 2270   # Settings
+            sleep 3
+            adb exec-out screencap -p > shots/07-settings.png
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: max-ui-shots
+          path: shots/
