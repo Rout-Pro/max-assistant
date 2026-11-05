@@ -3,20 +3,24 @@ package com.rout.max.ui
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.ui.graphics.Color
 
-/** MAX black minimal liquid-glass palette. */
+/** MAX JARVIS-HUD palette: black base, neon cyan accents, thin glowing borders. */
 object MaxColors {
     val Black = Color(0xFF000000)
-    val NearBlack = Color(0xFF080808)
-    val Glass = Color(0x14FFFFFF)          // subtle translucent glass surface
-    val GlassStrong = Color(0x1FFFFFFF)
-    val Border = Color(0x22FFFFFF)         // thin low-contrast grey border
-    val TextPrimary = Color(0xFFFFFFFF)
-    val TextSecondary = Color(0xFF9A9AA3)  // muted grey
-    val Accent = Color(0xFFE8E8F0)         // restrained silver-white
-    val AccentViolet = Color(0xFF8B7CFF)   // subtle violet highlight
-    val AccentBlue = Color(0xFF6EA8FF)     // subtle electric-blue highlight
-    val Success = Color(0xFF7BC796)
-    val Error = Color(0xFFD98A8A)
+    val NearBlack = Color(0xFF05070A)
+    val Glass = Color(0x0D35E0FF)          // faint cyan-tinted glass surface
+    val GlassStrong = Color(0x1A35E0FF)
+    val Border = Color(0x2B35E0FF)         // thin cyan border
+    val HudBorder = Color(0x4035E0FF)      // brighter HUD panel border
+    val TextPrimary = Color(0xFFEAFBFF)
+    val TextSecondary = Color(0xFF8FA8B8)  // muted blue-grey
+    val Accent = Color(0xFF5CE1FF)         // neon cyan
+    val HudCyan = Color(0xFF5CE1FF)
+    val HudCyanBright = Color(0xFF9BF1FF)
+    val HudBlue = Color(0xFF38BDF8)
+    val AccentViolet = Color(0xFF38BDF8)   // kept name; now electric blue
+    val AccentBlue = Color(0xFF2FB7FF)
+    val Success = Color(0xFF6FE3A5)
+    val Error = Color(0xFFFF7A7A)
     val Warning = Color(0xFFC9A96A)
 }
 

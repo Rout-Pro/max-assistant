@@ -15,7 +15,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -70,11 +69,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -97,8 +95,13 @@ import com.rout.max.core.TaskStepStatus
 import com.rout.max.core.VoiceEngine
 import com.rout.max.ui.MaxColorScheme
 import com.rout.max.ui.MaxColors
-import com.rout.max.ui.MaxOrb
+import com.rout.max.ui.HudPanel
+import com.rout.max.ui.JarvisCore
+import com.rout.max.ui.WaveformStrip
 import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.io.File
 
 data class ChatMsg(val text: String, val fromUser: Boolean, val emotion: String = "neutral")
@@ -274,20 +277,9 @@ class MainActivity : ComponentActivity() {
             )
             Spacer(Modifier.height(12.dp))
 
-            // User-supplied waveform-face art: Max's face on the main screen.
-            Image(
-                painter = painterResource(R.drawable.max_face),
-                contentDescription = "Max",
-                modifier = Modifier
-                    .size(148.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .border(1.dp, MaxColors.Border, RoundedCornerShape(28.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(Modifier.height(12.dp))
-
-            MaxOrb(state = state, size = 140.dp)
-            Spacer(Modifier.height(10.dp))
+            // JARVIS-style core: wireframe face inside reactor rings (state-driven).
+            JarvisCore(state = state, size = 216.dp)
+            Spacer(Modifier.height(2.dp))
             Text(
                 state.label,
                 color = when (state) {
@@ -295,8 +287,31 @@ class MainActivity : ComponentActivity() {
                     AssistantState.IDLE -> MaxColors.TextSecondary
                     else -> MaxColors.Accent
                 },
-                fontSize = 13.sp, letterSpacing = 2.sp
+                fontSize = 12.sp, letterSpacing = 3.sp, fontFamily = FontFamily.Monospace
             )
+            Spacer(Modifier.height(10.dp))
+
+            // Real-data HUD readouts: live clock, real battery, Gemini key state.
+            var now by remember { mutableStateOf("--:--:--") }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    now = SimpleDateFormat("hh:mm:ss a", Locale.getDefault()).format(Date())
+                    kotlinx.coroutines.delay(1000)
+                }
+            }
+            val battery = remember {
+                val bm = context.getSystemService(Context.BATTERY_SERVICE) as android.os.BatteryManager
+                bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            }
+            val keySet = remember { KeyStore.getApiKey(context).isNotBlank() }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HudPanel("TIME", now)
+                HudPanel("BATTERY", if (battery in 0..100) "$battery%" else "--")
+                HudPanel("GEMINI", if (keySet) "KEY SET" else "NO KEY")
+            }
+            Spacer(Modifier.height(8.dp))
+            WaveformStrip(state = state, modifier = Modifier.padding(horizontal = 8.dp))
+            Spacer(Modifier.height(10.dp))
 
             // Persistent stop control: visible whenever anything is active.
             if (state != AssistantState.IDLE && state != AssistantState.STOPPED) {
