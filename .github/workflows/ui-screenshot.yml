@@ -63,16 +63,16 @@ jobs:
             sleep 8
             adb exec-out screencap -p > shots/08-briefing.png
             # switch through tabs (bottom nav, 5 tabs on 1080x2400)
-            adb shell input tap 324 2270   # Chat
+            adb shell input tap 336 2160   # Chat (floating glass nav bar)
             sleep 3
             adb exec-out screencap -p > shots/04-chat.png
-            adb shell input tap 540 2270   # Control
+            adb shell input tap 540 2160   # Control
             sleep 3
             adb exec-out screencap -p > shots/05-control.png
-            adb shell input tap 756 2270   # Memory
+            adb shell input tap 743 2160   # Memory
             sleep 3
             adb exec-out screencap -p > shots/06-memory.png
-            adb shell input tap 972 2270   # Settings
+            adb shell input tap 946 2160   # Settings
             sleep 3
             adb exec-out screencap -p > shots/07-settings.png
       - name: Upload screenshots
