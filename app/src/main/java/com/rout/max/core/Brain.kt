@@ -189,6 +189,10 @@ ${JSONArray(screenNodes.take(85).map { JSONObject(it) }).toString()}
     fun apiUrl(model: String, apiKey: String): String =
         "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
 
+    /** Metadata probe: validates key + model availability with NO generation quota use. */
+    fun modelInfoUrl(model: String, apiKey: String): String =
+        "https://generativelanguage.googleapis.com/v1beta/models/$model?key=$apiKey"
+
     /** Used when the saved model name was renamed or retired. */
     const val FALLBACK_MODEL = "gemini-flash-latest"
 

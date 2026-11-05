@@ -40,4 +40,10 @@ class BrainErrorTest {
         assertTrue(Brain.diagnoseNetError("net").contains("internet"))
         assertEquals(Brain.FALLBACK_MODEL, "gemini-flash-latest")
     }
+
+    @Test fun modelInfoProbeUsesGetMetadataEndpoint() {
+        val url = Brain.modelInfoUrl("gemini-2.5-flash", "KEY123")
+        assertTrue(url.startsWith("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash?key="))
+        assertFalse(url.contains("generateContent"))
+    }
 }

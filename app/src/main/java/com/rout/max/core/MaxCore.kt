@@ -176,18 +176,46 @@ object MAXCore {
         }
     }
 
+    private suspend fun httpGet(url: String): ApiOutcome = withContext(Dispatchers.IO) {
+        var conn: HttpURLConnection? = null
+        try {
+            conn = (URL(url).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 15000
+                readTimeout = 20000
+            }
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
+            if (code in 200..299) ApiOutcome.Ok(text) else ApiOutcome.HttpErr(code, text)
+        } catch (e: javax.net.ssl.SSLException) {
+            ApiOutcome.NetErr("ssl")
+        } catch (e: java.net.SocketTimeoutException) {
+            ApiOutcome.NetErr("timeout")
+        } catch (e: java.net.UnknownHostException) {
+            ApiOutcome.NetErr("net")
+        } catch (e: java.net.ConnectException) {
+            ApiOutcome.NetErr("net")
+        } catch (e: Exception) {
+            ApiOutcome.NetErr("other")
+        } finally {
+            conn?.disconnect()
+        }
+    }
+
     /**
-     * Minimal live ping of the saved key + model. Returns a user-readable
-     * status line, never the key or the raw API body.
+     * Metadata-only check of the saved key + model (GET model info): validates
+     * the key and that the model exists WITHOUT any generation request, so it
+     * never touches quota or billing. Returns a user-readable status line,
+     * never the key or the raw API body.
      */
     suspend fun testApiKey(context: Context): String {
         val appCtx = context.applicationContext
         val apiKey = KeyStore.getApiKey(appCtx)
         if (apiKey.isBlank()) return "Pehle API key daal kar Save key dabayein."
         val model = KeyStore.getModel(appCtx).ifBlank { Brain.FALLBACK_MODEL }
-        val body = """{"contents":[{"role":"user","parts":[{"text":"Say OK"}]}]}"""
-        return when (val r = httpPost(Brain.apiUrl(model, apiKey), body)) {
-            is ApiOutcome.Ok -> "Key kaam kar rahi hai - model $model se jawab mil gaya."
+        return when (val r = httpGet(Brain.modelInfoUrl(model, apiKey))) {
+            is ApiOutcome.Ok -> "Key aur model ($model) dono OK - ye sirf check tha, quota use nahi hua."
             is ApiOutcome.HttpErr -> Brain.diagnoseHttpError(r.code, r.body)
             is ApiOutcome.NetErr -> Brain.diagnoseNetError(r.reason)
         }
