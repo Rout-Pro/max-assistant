@@ -15,6 +15,17 @@ jobs:
           java-version: '17'
       - name: Build APK
         run: bash gradlew :app:assembleDebug --no-daemon
+      - name: Sign APK (persistent key)
+        env:
+          MAX_KEYSTORE_BASE64: ${{ secrets.MAX_KEYSTORE_BASE64 }}
+          MAX_KEYSTORE_PASSWORD: ${{ secrets.MAX_KEYSTORE_PASSWORD }}
+          MAX_KEY_ALIAS: ${{ secrets.MAX_KEY_ALIAS }}
+          MAX_KEY_PASSWORD: ${{ secrets.MAX_KEY_PASSWORD }}
+        run: |
+          echo "$MAX_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/max.keystore"
+          APKSIGNER=$(ls "$ANDROID_HOME/build-tools/"*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" sign --ks "$RUNNER_TEMP/max.keystore" --ks-pass "pass:$MAX_KEYSTORE_PASSWORD" --ks-key-alias "$MAX_KEY_ALIAS" --key-pass "pass:$MAX_KEY_PASSWORD" --out app/build/outputs/apk/debug/Max.apk app/build/outputs/apk/debug/app-debug.apk
+          rm -f "$RUNNER_TEMP/max.keystore"
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -32,7 +43,7 @@ jobs:
           disable-animations: true
           script: |
             mkdir -p shots
-            adb install app/build/outputs/apk/debug/app-debug.apk
+            adb install app/build/outputs/apk/debug/Max.apk
             adb shell monkey -p com.rout.max -c android.intent.category.LAUNCHER 1
             sleep 12
             adb exec-out screencap -p > shots/01-home.png
@@ -73,4 +84,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: max-debug-apk-fixed
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/Max.apk
